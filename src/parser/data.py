@@ -1,0 +1,1 @@
+TRUD_VSEM_SEVER_ZAPAD_JSON_URL='https://opendata.trudvsem.ru/json/vacancy_5.json'
