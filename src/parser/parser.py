@@ -1,5 +1,8 @@
-import requests
+import os
+import json
 from typing import Optional, Tuple
+
+import requests
 
 from .data import TRUD_VSEM_SEVER_ZAPAD_JSON_URL
 from .proxy import ProxySetting
@@ -34,6 +37,23 @@ class VacansyParsers(object):
             ):
         self.proxy = proxy
         self.parser_url = parser_url
+
+    def get_all_vacansy_dev(self, data_path: str = '') -> Tuple[Optional[Exception], Optional[dict]]:
+        """Метод для получения всез вакансий НО С ФАЙЛА, который скачен
+        с opendata trudvsem, на вход идет путь до файла формата json"""
+
+        if os.path.isfile(data_path):
+            try:
+                with open(data_path, 'r', encoding='utf-8') as file:
+                    data = json.load(file)
+                    file.close()
+
+                return None, data
+            except Exception as ex:
+                return ex, None
+        else:
+            ex = Exception('file on {} is not found'.format(data_path))
+            return ex, None
 
 
     def get_all_vacansy(self) -> Tuple[Optional[Exception], Optional[requests.Response]]:

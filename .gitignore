@@ -11,3 +11,6 @@ wheels/
 
 #vscode
 .vscode
+
+#файл с вакансиями в opendata trudvsem
+vacancy_5.json
