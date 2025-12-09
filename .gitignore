@@ -14,3 +14,6 @@ wheels/
 
 #файл с вакансиями в opendata trudvsem
 vacancy_5.json
+
+# volumes базы данных
+pg_data
