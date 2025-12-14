@@ -1,6 +1,7 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 
-from sqlmodel import create_engine, SQLModel, Session, delete
+from sqlmodel import create_engine,\
+SQLModel, Session, delete, select, func
 
 from .models import *
 from .keys import KEYS_WICH_TURN_TO_STR, KEYS_WICH_TURN_TO_MANY_KEYS,\
@@ -120,3 +121,16 @@ class DbController(object):
             return None
         except Exception as ex:
             return ex
+        
+    def get_count_vacansy(self, address_code : str) -> Union[Optional[Exception], int]:
+        """Получить количество вакансий в выбранном городе или районе"""
+        vacansy_count : int = 0
+        try:
+            with Session(self.engine) as session:
+                statement = select(func.count(Vacansy.id)).where(Vacansy.addressCode == address_code)
+                vacansy_count = session.exec(statement).one()
+            
+            return None, vacansy_count
+        
+        except Exception as ex:
+            return ex, vacansy_count
