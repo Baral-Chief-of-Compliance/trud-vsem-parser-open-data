@@ -6,20 +6,20 @@ from db import DbController, Vacansy
 from address_code import ADDRESSES_CODES
 from api_models import AddressCodeVacansyCount
 
-# dbCon = DbController(
-#     'pgadmin',
-#     'Bi>wu84w',
-#     'vacansy',
-#     'localhost',
-#     3333
-# )
+dbCon = DbController(
+    'pgadmin',
+    'Bi>wu84w',
+    'vacansy',
+    'localhost',
+    3333
+)
 
 
-# err = dbCon.create_engine()
+err = dbCon.create_engine()
 
-# if err:
-#     print(err)
-#     sys.exit()
+if err:
+    print(err)
+    sys.exit()
 
 # err = dbCon.create_db_and_tables()
 
@@ -114,18 +114,26 @@ print('\n\n\nСейчас отсортирую все коды МО')
 for k in sorted(murmansks_code.keys()):
     print('{} ---- {}'.format(k, murmansks_code[k]['vacancyAddress']))
 
+
+
 print('\n\n\n\n')
-print(sorted(murmansks_code.keys()))
-# for vac in res['vacancies']:
-#     err = dbCon.create_vacansy_from_dict(vac)
-#     if err:
-#         print(err)
-#         sys.exit()
-        
-# err, count = dbCon.get_count_vacansy('5100000100000')
+print('Проверка работы фильтра')
 
-# if err:
-#     print(err)
-#     sys.exit()
+err, filter_vacancies = vp.filter_vacansy_in_districs(
+    res['vacancies']
+)
 
-# print(count)
+if err:
+    print(err)
+    sys.exit()
+
+# print(filter_vacancies)
+print(len(filter_vacancies))
+
+
+for fv in filter_vacancies:
+    err = dbCon.create_vacansy_from_dict(fv)
+
+    if err:
+        print(err)
+        sys.exit()

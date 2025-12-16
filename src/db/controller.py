@@ -122,8 +122,8 @@ class DbController(object):
         except Exception as ex:
             return ex
         
-    def get_count_vacansy(self, address_code : str) -> Union[Optional[Exception], int]:
-        """Получить количество вакансий в выбранном городе или районе"""
+    def get_count_work_place(self, min_code: int, max_code: int) -> Union[Optional[Exception], int]:
+        """Получить количество рабочих мест в выбранном городе или районе"""
         vacansy_count : int = 0
         try:
             with Session(self.engine) as session:

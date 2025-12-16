@@ -6,6 +6,8 @@ import requests
 
 from .data import TRUD_VSEM_SEVER_ZAPAD_JSON_URL
 from .proxy import ProxySetting
+from .districts import DISTRICTS
+
 
 class RequestError(Exception):
     """Класс исключения для всех ошибок запросов"""
@@ -83,3 +85,43 @@ class VacansyParsers(object):
 
         else:
             return None, response
+        
+    def filter_vacansy_in_districs(self, vacancies: list) -> Tuple[Optional[Exception], list]:
+        """Отфилтровать полученный вакансии, и возваращает list с вакансиями под наши районы,
+        единственный нюанс, что наш фильтр превращает addressCode строкове в int
+        """
+        filter_vacancies : list = []
+
+        try:
+            for v in vacancies:
+                for d in DISTRICTS:
+                    addressCode : int = 0
+                    
+                    if len(v['addressCode']) < 17:
+                        need_zero : int = 17 - len(v['addressCode'])
+                        intermediateСode : str = v['addressCode']
+
+                        for z in range(need_zero):
+                            intermediateСode += '0'
+                        
+                        addressCode = int(intermediateСode)
+
+                    elif len(v['addressCode']) == 17:
+                        addressCode = int(v['addressCode'])
+
+
+                    if d.min_code <= addressCode <= d.max_code:
+                        v['addressCode'] = addressCode
+                        filter_vacancies.append(v)
+                        break
+
+            return None, filter_vacancies
+        
+        except Exception as ex:
+            return ex, filter_vacancies
+
+
+        
+
+
+

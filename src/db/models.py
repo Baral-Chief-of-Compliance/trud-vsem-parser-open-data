@@ -1,6 +1,7 @@
 from typing import Optional
 
 from sqlmodel import Field, SQLModel
+import sqlalchemy as sa
 
 class Vacansy(SQLModel, table=True):
     """Модель Вакансий в базе данных"""
@@ -50,7 +51,10 @@ class Vacansy(SQLModel, table=True):
     isQuoted : bool = Field(default=False)
     creationDate : str = Field(default='Отсутствует')
     responsibilities : str = Field(default='Отсутствует')
-    addressCode : str = Field(default='Отсутствует')
+    addressCode : int = Field(
+        default=0,
+        sa_column=sa.Column(sa.BigInteger)
+    )
     regionName : str = Field(default='Отсутствует')
     status : str = Field(default='Отсутствует')
     vacancyUrl : str = Field(default='Отсутствует')
