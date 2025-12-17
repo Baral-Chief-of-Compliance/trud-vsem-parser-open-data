@@ -1,15 +1,11 @@
 import sys
 
-from fastapi import FastAPI, HTTPException
-from sqlmodel import Session, select
-from metadata_api import DESCRIPTION, TAG_VACANSY,\
-TAGS_METADATA, TITEL, SUMMARY, VERSION,\
-TAG_ADDRESS
+from fastapi import FastAPI, HTTPException, Query
+from metadata_api import DESCRIPTION, TAG_DISTRICTS,\
+TAGS_METADATA, TITEL, SUMMARY, VERSION, TAG_VACANSY
 
 from db import Vacansy, DbController
-from api_models import AddressCode, AddressCodeVacansyCount
-from address_code import ADDRESSES_CODES
-
+from parser import DISTRICTS, DistrictModel
 
 dbCon = DbController(
     'pgadmin',
@@ -33,19 +29,49 @@ app = FastAPI(
     openapi_tags=TAGS_METADATA
 )
 
-@app.get('/vacansy/', response_model=list[Vacansy], tags=[TAG_VACANSY])
-def get_all_vacansy():
-    """Получить все вакансии из базы"""
-    with Session(dbCon.engine) as session:
-        vacansys = session.exec(select(Vacansy)).all()
-        return vacansys
-    
 
+@app.get('/vacansy/districts/{district_id}', response_model=list[Vacansy], tags=[TAG_VACANSY])
+def get_vacansies_from_districts(
+    district_id: int,
+    offset: int=0,
+    limit: int = Query(default=100, le=100)
+    ):
+    """Получить все вакансии из района/города МО по его district_id"""
+    find_district : bool = False
+
+    district : DistrictModel
+    for d in DISTRICTS:
+        if d.id == district_id:
+            district = d
+            find_district = True
+            break
+    if find_district:
+        err, vacancies = dbCon.get_vacancies_between_address_codes(
+            district.min_code,
+            district.max_code,
+            limit=limit,
+            offset=offset
+        )
+
+        if not err:
+            return vacancies
+        else:
+            return HTTPException(
+                status_code=400,
+                detail=f'Ошибка при получения вакансий из базы {err}'
+            )
+    else:
+        return HTTPException(
+            status_code=404,
+            detail=f'Не нашел район/город по его {district_id}'
+        )
+
+    
 @app.delete('/vacansy/delete/', tags=[TAG_VACANSY])
 def delete_all_vacansy():
     """Удалить все вакансии из базы"""
     err = dbCon.delete_all_vacancies()
-    if err:
+    if not err:
         return {'message': 'Все вакансии из базы удалены'}
     else:
         raise HTTPException(
@@ -54,31 +80,20 @@ def delete_all_vacansy():
         )
     
 
-@app.get('/addresses/', response_model=list[AddressCode], tags=[TAG_ADDRESS])
-def get_all_addresses():
-    """Получить адреса и коды городов и районов Мурманской области"""
-    return ADDRESSES_CODES
+@app.get('/districts/', response_model=list[DistrictModel], tags=[TAG_DISTRICTS])
+def get_districts_with_work_places():
+    """Получить районы и города Мурманской области c кол-во рабочих мест"""
+    addresses_code_with_vacansy : list[DistrictModel] = DISTRICTS.copy()
 
-
-@app.get('/addresses/vacansy-count/', response_model=list[AddressCodeVacansyCount], tags=[TAG_ADDRESS])
-def get_all_addresse_with_vacansy_count():
-    """Получить адреса и коды городов и районов Мурманской области c кол-во Вакансий"""
-    addresses_code_with_vacansy : list[AddressCodeVacansyCount] = []
-    for ac in ADDRESSES_CODES:
-        err, vacansy_count = dbCon.get_count_vacansy(ac.code)
-
+    for ac in addresses_code_with_vacansy:
+        err, ac.work_places = dbCon.get_count_work_place(
+            min_code = ac.min_code,
+            max_code = ac.max_code
+        )
         if err:
             raise HTTPException(
                 status_code=400,
                 detail=f'Ошибка во время получения вакансий с addressCode = ${ac.code}'
-            )
-        else:
-            addresses_code_with_vacansy.append(
-                AddressCodeVacansyCount(
-                    code=ac.code,
-                    name=ac.name,
-                    vacansy_count=vacansy_count
-                )
             )
 
     return addresses_code_with_vacansy

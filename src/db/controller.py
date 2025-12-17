@@ -1,7 +1,8 @@
 from typing import Optional, Dict, Any, Union
 
 from sqlmodel import create_engine,\
-SQLModel, Session, delete, select, func
+SQLModel, Session, delete, select
+from sqlalchemy import func
 
 from .models import *
 from .keys import KEYS_WICH_TURN_TO_STR, KEYS_WICH_TURN_TO_MANY_KEYS,\
@@ -127,10 +128,37 @@ class DbController(object):
         vacansy_count : int = 0
         try:
             with Session(self.engine) as session:
-                statement = select(func.count(Vacansy.id)).where(Vacansy.addressCode == address_code)
-                vacansy_count = session.exec(statement).one()
+                statement = select(Vacansy).where(
+                    Vacansy.addressCode >= min_code,
+                    Vacansy.addressCode <= max_code
+                )
+
+                res = session.exec(statement)
+                vacancies = res.all()
+
+                for v in vacancies:
+                    vacansy_count += v.workPlaces
             
             return None, vacansy_count
         
         except Exception as ex:
             return ex, vacansy_count
+        
+    def get_vacancies_between_address_codes(
+            self, 
+            min_code: int,
+            max_code: int,
+            limit: int,
+            offset: int = 0) ->  Union[Optional[Exception], list[Vacansy]]:
+        """Получить вакансии с района/города по его id"""
+        try:
+            with Session(self.engine) as session:
+                vacancies = session.exec(
+                    select(Vacansy).where(
+                    Vacansy.addressCode >= min_code,
+                    Vacansy.addressCode <= max_code
+                ).offset(offset).limit(limit)
+                ).all()
+                return None, vacancies
+        except Exception as ex:
+            return ex, []

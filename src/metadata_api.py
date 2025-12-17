@@ -7,7 +7,7 @@ DESCRIPTION = """
 * **Получить список всех вакансий в МО** (_not implemented_).
 """
 TAG_VACANSY = "Вакансии"
-TAG_ADDRESS = "Города/регионы Мурманской области"
+TAG_DISTRICTS = "Города/районы Мурманской области"
 
 TAGS_METADATA = [
     {
@@ -15,8 +15,8 @@ TAGS_METADATA = [
         "description": "Операции связанные с вакансиями с opendata https://trudvsem.ru/opendata/datasets"
     },
     {
-        "name": TAG_ADDRESS,
-        "description": "Операции связанные с информацией о городах и регионах Мурманской области"
+        "name": TAG_DISTRICTS,
+        "description": "Операции связанные с информацией о городах и районах Мурманской области"
     },
 ]
 
