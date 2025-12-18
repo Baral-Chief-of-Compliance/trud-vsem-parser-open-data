@@ -80,7 +80,6 @@ class DbController(object):
                         if len(vacansy_dict[k]) > 0:
                             if isinstance(vacansy_dict[k][0], dict):
                                 copy_vacansy_dict[k] = ''.join(str(item) for item in vacansy_dict[k])
-                                print(copy_vacansy_dict[k])
                         else:
                             copy_vacansy_dict[k] = ', '.join(vacansy_dict[k])
                     elif isinstance(vacansy_dict[k], dict):

@@ -1,11 +1,21 @@
 import sys
+import logging
+import threading
+import time
 
 from fastapi import FastAPI, HTTPException, Query
 from metadata_api import DESCRIPTION, TAG_DISTRICTS,\
 TAGS_METADATA, TITEL, SUMMARY, VERSION, TAG_VACANSY
 
 from db import Vacansy, DbController
-from parser import DISTRICTS, DistrictModel
+from parser import DISTRICTS, DistrictModel, VacansyParsers
+
+logging.basicConfig(
+    level=logging.INFO,
+    filename="api_log.log",
+    filemode="a",
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 dbCon = DbController(
     'pgadmin',
@@ -15,11 +25,62 @@ dbCon = DbController(
     3333
 )
 
+vp = VacansyParsers()
+
 err = dbCon.create_engine()
 
 if err:
-    print(err)
+    logging.error('create_engin : {}'.format(err))
     sys.exit()
+
+logging.info('create_engin success')
+
+
+def get_vacansy_from_open_data():
+    """Получить вакансии с open data"""
+
+    err, res = vp.get_all_vacansy()
+
+    json = res.json()
+
+    if err:
+        logging.error('get_vacansy_from_open_data : {}'.format(err))
+        return
+    
+    err, filter_vacancies = vp.filter_vacansy_in_districs(json['vacancies'])
+
+    if err:
+        logging.error('filter_vacansy_in_districs : {}'.format(err))
+        return
+    
+    err = dbCon.delete_all_vacancies()
+
+    if err:
+        logging.error('delete_all_vacancies : {}'.format(err))
+        return
+    
+    for fv in filter_vacancies:
+        err = dbCon.create_vacansy_from_dict(fv)
+
+        if err:
+            logging.error('create_vacansy_from_dict : vacansy : {}  err : {}'
+                          .format(fv, err))
+            
+    logging.info('get_vacansy_from_open_data : success to get vacansy from open data')
+
+def start_background_task():
+    """Запусти фоновую задачу"""
+    def worker():
+        logger = logging.getLogger(__name__)
+        logger.info('Фоновый поток запущен')
+        while True:
+            get_vacansy_from_open_data()
+            time.sleep(60)
+
+    thread = threading.Thread(target=worker, daemon=True)
+    thread.start()
+    logging.info('Background Task for get vacansy is start')
+
 
 app = FastAPI(
     title=TITEL,
@@ -29,6 +90,8 @@ app = FastAPI(
     openapi_tags=TAGS_METADATA
 )
 
+
+start_background_task()
 
 @app.get('/vacansy/districts/{district_id}', response_model=list[Vacansy], tags=[TAG_VACANSY])
 def get_vacansies_from_districts(
@@ -54,13 +117,19 @@ def get_vacansies_from_districts(
         )
 
         if not err:
+            logging.info('get_vacansies_from_districts {} : vacansy from district by id {}'
+                         .format(200, district_id))
             return vacancies
         else:
+            logging.error('get_vacansies_from_districts {} : err when get vacansy {}'
+                          .format(400, err))
             return HTTPException(
                 status_code=400,
                 detail=f'Ошибка при получения вакансий из базы {err}'
             )
     else:
+        logging.error('get_vacansies_from_districts {} : not found district by {}'
+                      .format(404, district_id))
         return HTTPException(
             status_code=404,
             detail=f'Не нашел район/город по его {district_id}'
@@ -72,8 +141,11 @@ def delete_all_vacansy():
     """Удалить все вакансии из базы"""
     err = dbCon.delete_all_vacancies()
     if not err:
+        logging.info('delete_all_vacansy {}'.format(200))
         return {'message': 'Все вакансии из базы удалены'}
     else:
+        logging.info('delete_all_vacansy {} : {}'
+                      .format(400, err))
         raise HTTPException(
             status_code=400,
             detail='Ошибка при удалении всех вакансий из базы'
@@ -91,9 +163,13 @@ def get_districts_with_work_places():
             max_code = ac.max_code
         )
         if err:
+            logging.info('get_districts_with_work_places {} : {}'
+                         .format(400, err))
             raise HTTPException(
                 status_code=400,
                 detail=f'Ошибка во время получения вакансий с addressCode = ${ac.code}'
             )
 
+    logging.info('get_districts_with_work_places {}'
+                 .format(200))
     return addresses_code_with_vacansy

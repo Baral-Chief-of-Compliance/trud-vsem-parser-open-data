@@ -17,3 +17,6 @@ vacancy_5.json
 
 # volumes базы данных
 pg_data
+
+#logs
+api_log.log

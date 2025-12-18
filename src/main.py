@@ -36,7 +36,12 @@ if err:
 
 vp = VacansyParsers()
 
-err, res = vp.get_all_vacansy_dev('./vacancy_5.json')
+# err, res = vp.get_all_vacansy_dev('./vacancy_5.json')
+
+err, res = vp.get_all_vacansy()
+
+res = res.json()
+
 
 if err:
     print(err)
