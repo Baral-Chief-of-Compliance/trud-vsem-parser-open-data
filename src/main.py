@@ -21,11 +21,12 @@ if err:
     print(err)
     sys.exit()
 
-# err = dbCon.create_db_and_tables()
 
-# if err:
-#     print(err)
-#     sys.exit()
+err = dbCon.create_db_and_tables()
+
+if err:
+    print(err)
+    sys.exit()
 
 
 # err = dbCon.delete_all_vacancies()

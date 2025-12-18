@@ -157,8 +157,7 @@ class DbController(object):
                     select(Vacansy).where(
                     Vacansy.addressCode >= min_code,
                     Vacansy.addressCode <= max_code
-                ).offset(offset).limit(limit)
-                ).all()
+                ).order_by(Vacansy.vacancyName).offset(offset).limit(limit)).all()
                 return None, vacancies
         except Exception as ex:
             return ex, []
