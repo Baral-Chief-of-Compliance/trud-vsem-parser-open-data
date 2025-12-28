@@ -3,5 +3,7 @@
 ## dev
 
 ```bash
-uv run fastapi dev api.py
+uv run fastapi dev api.py --no-reload
 ```
+
+## prod

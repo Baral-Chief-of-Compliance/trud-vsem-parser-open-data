@@ -68,6 +68,7 @@ def get_vacansy_from_open_data():
             
     logging.info('get_vacansy_from_open_data : success to get vacansy from open data')
 
+
 def start_background_task():
     """Запусти фоновую задачу"""
     def worker():
@@ -97,7 +98,10 @@ start_background_task()
 def get_vacansies_from_districts(
     district_id: int,
     offset: int=0,
-    limit: int = Query(default=100, le=100)
+    limit: int = Query(default=100, le=100),
+    salary_min: int | None = None,
+    salary_max: int | None = None,
+    vacancy_name: int | None = None
     ):
     """Получить все вакансии из района/города МО по его district_id"""
     find_district : bool = False
