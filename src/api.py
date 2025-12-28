@@ -99,8 +99,8 @@ def get_vacansies_from_districts(
     district_id: int,
     offset: int=0,
     limit: int = Query(default=100, le=100),
-    salary_min: int | None = None,
-    salary_max: int | None = None,
+    salary_min: int = 0,
+    salary_max: int  = 99999999,
     vacancy_name: int | None = None
     ):
     """Получить все вакансии из района/города МО по его district_id"""
@@ -116,6 +116,9 @@ def get_vacansies_from_districts(
         err, vacancies = dbCon.get_vacancies_between_address_codes(
             district.min_code,
             district.max_code,
+            salary_min=str(salary_min),
+            salary_max=str(salary_max),
+            vacancy_name=vacancy_name,
             limit=limit,
             offset=offset
         )

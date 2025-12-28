@@ -147,7 +147,10 @@ class DbController(object):
             self, 
             min_code: int,
             max_code: int,
+            salary_min : str,
+            salary_max : str,
             limit: int,
+            vacancy_name : str | None = None,
             offset: int = 0) ->  Union[Optional[Exception], list[Vacansy]]:
         """Получить вакансии с района/города по его id"""
         try:
@@ -156,7 +159,9 @@ class DbController(object):
                     select(Vacansy).where(
                     Vacansy.addressCode >= min_code,
                     Vacansy.addressCode <= max_code
-                ).order_by(Vacansy.vacancyName).offset(offset).limit(limit)).all()
+                ).order_by(Vacansy.vacancyName)\
+                    .filter(Vacansy.salaryMin >= salary_min, Vacansy.salaryMax <= salary_max)\
+                        .offset(offset).limit(limit)).all()
                 return None, vacancies
         except Exception as ex:
             return ex, []
